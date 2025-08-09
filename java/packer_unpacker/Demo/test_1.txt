@@ -1,0 +1,1 @@
+Packing: Combines multiple files from a directory into a single encrypted file with metadata (file name, size, checksum).
