@@ -1,1 +1,0 @@
-Unpacking: Extracts files back to their original form with integrity checks using MD5 checksum and header verification.
