@@ -1,0 +1,1 @@
+Security: Encryption for data safety, checksum validation, and logging of every activity.

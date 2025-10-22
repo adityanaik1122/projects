@@ -1,0 +1,1 @@
+MD5 (Message-Digest Algorithm 5) is a hashing algorithm that converts input data (like a file) into a fixed 128-bit (16-byte) hash value.
