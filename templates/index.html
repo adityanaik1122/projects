@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Spam & Phishing Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h1>AI Spam & Phishing Detector</h1>
+            </div>
+            <p class="tagline">Protect yourself from malicious content with AI-powered detection</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Panel: Input Form -->
+            <div class="input-panel">
+                <div class="card">
+                    <h2><i class="fas fa-search"></i> Check Content</h2>
+                    
+                    <form method="POST" enctype="multipart/form-data" id="detection-form">
+                        <div class="form-group">
+                            <label for="type"><i class="fas fa-filter"></i> Content Type</label>
+                            <div class="type-selector">
+                                <div class="type-option" data-value="email">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>Email</span>
+                                </div>
+                                <div class="type-option" data-value="sms">
+                                    <i class="fas fa-comment-sms"></i>
+                                    <span>SMS</span>
+                                </div>
+                                <div class="type-option" data-value="url">
+                                    <i class="fas fa-link"></i>
+                                    <span>URL</span>
+                                </div>
+                                <div class="type-option" data-value="qr">
+                                    <i class="fas fa-qrcode"></i>
+                                    <span>QR Code</span>
+                                </div>
+                            </div>
+                            <input type="hidden" name="type" id="type-input" value="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="content"><i class="fas fa-edit"></i> Content</label>
+                            <textarea name="content" id="content" placeholder="Paste your email, SMS, or URL here..."></textarea>
+                            <div class="char-count">Characters: <span id="char-count">0</span></div>
+                        </div>
+
+                        <div class="form-group file-upload" id="qr-upload" style="display: none;">
+                            <label for="qr_image"><i class="fas fa-upload"></i> Upload QR Code Image</label>
+                            <div class="upload-area" id="upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop or click to upload QR code</p>
+                                <input type="file" name="qr_image" id="qr_image" accept="image/*">
+                            </div>
+                            <div class="file-preview" id="file-preview"></div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-shield-check"></i> Analyze Content
+                        </button>
+                    </form>
+
+                    {% if decoded %}
+                    <div class="decoded-qr">
+                        <h3><i class="fas fa-qrcode"></i> Decoded QR Content</h3>
+                        <p>{{ decoded }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if prediction %}
+                    <div class="result-card {{ prediction|lower }}">
+                        <h3><i class="fas fa-chart-bar"></i> Analysis Result</h3>
+                        <div class="result-content">
+                            <div class="result-icon">
+                                {% if prediction|lower in ['spam', 'phishing'] %}
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {% else %}
+                                <i class="fas fa-check-circle"></i>
+                                {% endif %}
+                            </div>
+                            <div class="result-text">
+                                <h4>{{ prediction }}</h4>
+                                <p>
+                                    {% if prediction|lower in ['spam', 'phishing'] %}
+                                    This content appears to be malicious. Exercise caution.
+                                    {% else %}
+                                    This content appears to be safe. No threats detected.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right Panel: History -->
+            <div class="history-panel">
+                <div class="card">
+                    <h2><i class="fas fa-history"></i> Recent Scans</h2>
+                    
+                    {% if history %}
+                    <div class="history-list">
+                        {% for item in history %}
+                        <div class="history-item {{ item.result|lower }}">
+                            <div class="history-icon">
+                                {% if item.type == 'email' %}
+                                <i class="fas fa-envelope"></i>
+                                {% elif item.type == 'sms' %}
+                                <i class="fas fa-comment-sms"></i>
+                                {% elif item.type == 'url' %}
+                                <i class="fas fa-link"></i>
+                                {% else %}
+                                <i class="fas fa-qrcode"></i>
+                                {% endif %}
+                            </div>
+                            <div class="history-content">
+                                <div class="history-header">
+                                    <span class="history-type">{{ item.type|upper }}</span>
+                                    <span class="history-time">Just now</span>
+                                </div>
+                                <p class="history-text">{{ item.content|truncate(60) }}</p>
+                                <div class="history-result {{ item.result|lower }}">
+                                    <i class="fas fa-{% if item.result|lower in ['spam', 'phishing'] %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                                    {{ item.result }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-history">
+                        <i class="fas fa-inbox"></i>
+                        <p>No scans yet. Start by analyzing some content!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics - Full Width -->
+        <div class="card stats-card">
+            <h2><i class="fas fa-chart-pie"></i> Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{ history|length }}</div>
+                    <div class="stat-label">Total Scans</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">
+                        {% set safe_count = history|selectattr('result', 'in', ['ham', 'legitimate'])|list|length %}
+                        {{ safe_count }}
+                    </div>
+                    <div class="stat-label">Safe</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">
+                        {% set threat_count = history|selectattr('result', 'in', ['spam', 'phishing'])|list|length %}
+                        {{ threat_count }}
+                    </div>
+                    <div class="stat-label">Threats</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p><i class="fas fa-info-circle"></i> This AI-powered system detects spam, phishing URLs, and malicious QR codes using machine learning models.</p>
+            <p class="footer-links">
+                <a href="#"><i class="fas fa-code"></i> API Docs</a>
+                <a href="#"><i class="fas fa-question-circle"></i> Help</a>
+                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
